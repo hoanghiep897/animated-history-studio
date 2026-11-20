@@ -9,8 +9,8 @@
     "render": "remotion render src/index.ts PompeiiShort out/pompeii.mp4 --codec h264 --gl swangle --concurrency 1 --crf 19",
     "still": "remotion still src/index.ts PompeiiShort out/preview.png --frame 240 --gl swangle",
     "typecheck": "tsc --noEmit",
-    "render:bridge:preview": "remotion render src/index.ts BridgeTemplate out/bridge_sample.mp4 --frames 0-119 --scale 0.3333 --codec h264 --gl swangle --concurrency 1 --crf 20",
-    "still:bridge": "remotion still src/index.ts BridgeTemplate out/bridge_preview.png --frame 120 --scale 0.3333 --gl swangle"
+    "render:bridge:preview": "remotion render src/index.ts BridgeTemplate out/bridge_sample.mp4 --frames 0-119 --scale 0.5 --codec h264 --gl swangle --concurrency 1 --crf 20 --props='{\"post\":{\"dpr\":0.5}}'",
+    "still:bridge": "remotion still src/index.ts BridgeTemplate out/bridge_preview.png --frame 120 --scale 0.5 --gl swangle --props='{\"post\":{\"dpr\":0.5}}'"
   },
   "dependencies": {
     "remotion": "4.0.545",
