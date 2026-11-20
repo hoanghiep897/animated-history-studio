@@ -2,6 +2,31 @@
 
 Create animated history shorts with **2D ink-outlined characters inside a real 3D scene**. This repository uses **Three.js / React Three Fiber / Remotion**. GitHub Actions renders MP4 in the cloud using software WebGL.
 
+## New film: BẠCH ĐẰNG 938 (Ngô Quyền versus the Southern Han fleet)
+
+**A new original 24-second cinematic story; not the source Bridge sample.**
+
+Render with GitHub Actions → **Render Bach Dang 938 — original film**.
+The render uses the actual MIT-licensed `mromidev/claude-animated-shorts` artistic engine:
+`bodyFront` and `Pen` for 2D walk/pose animation on Three.js ships,
+`InkPass` for environment ink contours, `GradeEffect`, bloom and tone mapping.
+The scene and score are completely new. `LensBlur` is intentionally omitted due
+to a known software WebGL incompatibility in our previous Pompeii scene.
+
+Style enhancements relative to the previous movie: hard alpha-tested character
+cutouts with `depthWrite: true` (no translucent faces or torsos), stronger
+value separation, saturated teal water and dark brown ships, deeper ink lines,
+five purposeful camera angles, animated oarsmen, waving flags, tidal recession,
+fixed wooden stakes exposed by receding water, boats that advance and then tilt,
+contact shadows, water wakes and a dramatic final title.
+
+Video: 24s, 25fps, 9:16, 540x960 output on cloud runner.
+`src/videos/bach-dang/BachDang938.tsx` is the new film source.
+`scripts/make_bach_dang_audio.py` produces original music/SFX and
+`.github/workflows/bach-dang.yml` renders MP4 and shot previews.
+Historical setup: **Bạch Đằng, late AD 938**, led by Ngô Quyền against
+the Southern Han fleet. The story simplifies details for visual narration.
+
 ## New original short: POMPEII — The Last Delivery (AD 79)
 
 This is **not** a re-render of BridgeShort and **not** a collection of still images.

@@ -1,0 +1,61 @@
+name: Render Bach Dang 938 — original film
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/videos/bach-dang/**"
+      - "src/Root.tsx"
+      - "scripts/make_bach_dang_audio.py"
+      - ".github/workflows/bach-dang.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnss3 libgbm1 libasound2t64 libatk-bridge2.0-0 libgtk-3-0 ffmpeg
+      - run: npm install --no-audit --no-fund
+      - name: Generate original score and sound effects
+        run: python3 scripts/make_bach_dang_audio.py
+      - name: Install browser
+        run: npx remotion browser ensure
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Preview 5 original story shots
+        run: |
+          mkdir -p out
+          for frame in 45 120 245 365 515; do
+            npx remotion still src/index.ts BachDang938 out/bach_dang_$frame.png \
+              --frame "$frame" --gl swangle --scale 0.75
+          done
+      - name: Render full animated short
+        run: |
+          npx remotion render src/index.ts BachDang938 out/Bach_Dang_938_Original_Short.mp4 \
+            --codec h264 --gl swangle --concurrency 1 --scale 0.75 --crf 18
+      - name: Check MP4 is not blank and has both audio and video
+        run: |
+          python3 scripts/check_video_frames.py out/Bach_Dang_938_Original_Short.mp4
+          ffprobe -v error -show_entries format=duration,size -of default=noprint_wrappers=1 out/Bach_Dang_938_Original_Short.mp4
+          ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1 out/Bach_Dang_938_Original_Short.mp4
+      - name: Upload film and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bach-dang-938-new-film
+          path: |
+            out/Bach_Dang_938_Original_Short.mp4
+            out/bach_dang_*.png
+          if-no-files-found: warn
+          retention-days: 14
