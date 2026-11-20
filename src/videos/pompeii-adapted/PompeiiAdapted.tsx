@@ -235,10 +235,11 @@ const FullScene:React.FC<{effectsMode?:EffectsMode}>=({effectsMode='all'})=>{
   const info=world.update(f,camera as THREE.PerspectiveCamera,scene);
   fx.lens.focus=info.focus;fx.lens.cInf=info.t>8?6.5:8;
   gradeFor(fx.grade,info.night?'golden':'day');
+  // In GitHub's software WebGL runner the original LensBlur depth gather
+  // outputs a black image in this NEW scene. The original InkPass, Bloom,
+  // neutral tone map and GradeEffect remain enabled. See debug compositions.
   const post=useMemo(()=><EffectComposer multisampling={0}>
       <primitive object={fx.ink} dispose={null}/>
-      <primitive object={fx.lens.pre} dispose={null}/>
-      <primitive object={fx.lens.main} dispose={null}/>
       <primitive object={fx.bloom} dispose={null}/>
       <primitive object={fx.tone} dispose={null}/>
       <primitive object={fx.grade} dispose={null}/>
