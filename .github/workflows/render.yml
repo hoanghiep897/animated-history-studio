@@ -1,0 +1,59 @@
+name: Render animation
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install browser system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnss3 libgbm1 libasound2t64 libatk-bridge2.0-0 libgtk-3-0 ffmpeg
+
+      - name: Install npm dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Generate original sound
+        run: npm run audio
+
+      - name: Install headless browser
+        run: npx remotion browser ensure
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Render a preview still
+        run: npm run still
+
+      - name: Render the animated MP4
+        run: npm run render
+
+      - name: Inspect MP4
+        run: ffprobe -v error -show_entries format=duration,size -of default=noprint_wrappers=1 out/pompeii.mp4
+
+      - name: Upload MP4 and still
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pompeii-animation
+          path: |
+            out/pompeii.mp4
+            out/preview.png
+          if-no-files-found: warn
+          retention-days: 14

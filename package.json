@@ -1,0 +1,29 @@
+{
+  "name": "animated-history-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "2D cartoon characters in a 3D Pompeii scene rendered by Remotion and GitHub Actions",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "audio": "python3 scripts/make_audio.py",
+    "render": "remotion render src/index.ts PompeiiShort out/pompeii.mp4 --codec h264 --gl swangle --concurrency 1 --crf 19",
+    "still": "remotion still src/index.ts PompeiiShort out/preview.png --frame 240 --gl swangle",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "remotion": "4.0.545",
+    "@remotion/three": "4.0.545",
+    "@remotion/cli": "4.0.545",
+    "@react-three/fiber": "8.18.0",
+    "three": "0.174.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.3",
+    "@types/react": "18.3.23",
+    "@types/react-dom": "18.3.7",
+    "@types/three": "0.174.0",
+    "typescript": "5.8.3"
+  }
+}
