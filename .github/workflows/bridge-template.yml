@@ -1,0 +1,54 @@
+name: Render original bridge template (smoke test)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/Root.tsx"
+      - "src/videos/bridge/**"
+      - "upstream/bridge/**"
+      - "scripts/make_bridge_audio.py"
+      - "package.json"
+      - ".github/workflows/bridge-template.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bridge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnss3 libgbm1 libasound2t64 libatk-bridge2.0-0 libgtk-3-0 ffmpeg
+      - name: Install Remotion, Three.js and original postprocessing dependencies
+        run: npm install --no-audit --no-fund
+      - name: Generate original test soundtrack
+        run: python3 scripts/make_bridge_audio.py
+      - name: Install Remotion browser
+        run: npx remotion browser ensure
+      - name: Type-check upstream template
+        run: npm run typecheck
+      - name: Render original template still
+        run: npm run still:bridge
+      - name: Render 4-second original template excerpt
+        run: npm run render:bridge:preview
+      - name: Inspect MP4
+        run: ffprobe -v error -show_entries format=duration,size -of default=noprint_wrappers=1 out/bridge_sample.mp4
+      - name: Upload film sample
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-bridge-template-preview
+          path: |
+            out/bridge_preview.png
+            out/bridge_sample.mp4
+          if-no-files-found: warn
+          retention-days: 14

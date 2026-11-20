@@ -8,7 +8,9 @@
     "audio": "python3 scripts/make_audio.py",
     "render": "remotion render src/index.ts PompeiiShort out/pompeii.mp4 --codec h264 --gl swangle --concurrency 1 --crf 19",
     "still": "remotion still src/index.ts PompeiiShort out/preview.png --frame 240 --gl swangle",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "render:bridge:preview": "remotion render src/index.ts BridgeTemplate out/bridge_sample.mp4 --frames 0-119 --scale 0.3333 --codec h264 --gl swangle --concurrency 1 --crf 20",
+    "still:bridge": "remotion still src/index.ts BridgeTemplate out/bridge_preview.png --frame 120 --scale 0.3333 --gl swangle"
   },
   "dependencies": {
     "remotion": "4.0.545",
@@ -17,7 +19,9 @@
     "@react-three/fiber": "8.18.0",
     "three": "0.174.0",
     "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react-dom": "18.3.1",
+    "@react-three/postprocessing": "2.19.1",
+    "postprocessing": "6.38.3"
   },
   "devDependencies": {
     "@types/node": "22.15.3",
