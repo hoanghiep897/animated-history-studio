@@ -1,0 +1,36 @@
+name: Preview Bach Dang Extended V3 (9 frames only)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/bach-dang-extended-preview.yml"
+      - "src/videos/bach-dang/BachDangExtended.tsx"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  previews:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: npm install --no-fund --no-audit
+      - run: python3 scripts/make_bach_dang_extended_audio.py
+      - run: npx remotion browser ensure
+      - run: npm run typecheck
+      - name: Render preview only without waiting for 1,200 video frames
+        run: |
+          mkdir -p out
+          for f in 60 200 335 490 610 690 850 1040 1170; do
+            npx remotion still src/index.ts BachDangExtended out/extended_$f.png --frame "$f" --gl swangle --scale 0.75
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bach-dang-v3-preview-only
+          path: out/extended_*.png
+          if-no-files-found: error
