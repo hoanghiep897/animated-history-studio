@@ -1,14 +1,6 @@
 name: Render ORIGINAL-story Pompeii (upstream style)
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "src/videos/pompeii-adapted/**"
-      - "src/Root.tsx"
-      - "scripts/make_pompeii_adapted_audio.py"
-      - "package.json"
-      - ".github/workflows/pompeii-adapted.yml"
   workflow_dispatch:
 
 permissions:

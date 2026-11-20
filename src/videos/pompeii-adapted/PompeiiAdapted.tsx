@@ -219,7 +219,8 @@ class PompeiiWorld {
  }
  dispose(){for(const p of this.people)p.dispose();}
 }
-const FullScene:React.FC<{withEffects?:boolean}>=({withEffects=true})=>{
+type EffectsMode='all'|'none'|'ink'|'tone'|'grade'|'lens';
+const FullScene:React.FC<{effectsMode?:EffectsMode}>=({effectsMode='all'})=>{
   const f=useCurrentFrame();
   const {camera,scene}=useThree();
   const world=useMemo(()=>new PompeiiWorld(),[]);
@@ -242,13 +243,29 @@ const FullScene:React.FC<{withEffects?:boolean}>=({withEffects=true})=>{
       <primitive object={fx.tone} dispose={null}/>
       <primitive object={fx.grade} dispose={null}/>
     </EffectComposer>,[fx]);
-  return <><primitive object={world.root} dispose={null}/>{withEffects?post:null}</>;
+  const postInk=useMemo(()=><EffectComposer multisampling={0}>
+    <primitive object={fx.ink} dispose={null}/>
+  </EffectComposer>,[fx]);
+  const postTone=useMemo(()=><EffectComposer multisampling={0}>
+    <primitive object={fx.tone} dispose={null}/>
+  </EffectComposer>,[fx]);
+  const postGrade=useMemo(()=><EffectComposer multisampling={0}>
+    <primitive object={fx.tone} dispose={null}/>
+    <primitive object={fx.grade} dispose={null}/>
+  </EffectComposer>,[fx]);
+  const postLens=useMemo(()=><EffectComposer multisampling={0}>
+    <primitive object={fx.lens.pre} dispose={null}/>
+    <primitive object={fx.lens.main} dispose={null}/>
+    <primitive object={fx.tone} dispose={null}/>
+  </EffectComposer>,[fx]);
+  const effect=effectsMode==='none'?null:effectsMode==='ink'?postInk:effectsMode==='tone'?postTone:effectsMode==='grade'?postGrade:effectsMode==='lens'?postLens:post;
+  return <><primitive object={world.root} dispose={null}/>{effect}</>;
 };
 export const PompeiiAdapted:React.FC=()=>{
  const f=useCurrentFrame(),t=f/FPS;
  const flash=t>=7.4&&t<=7.72?Math.sin(Math.PI*(t-7.4)/.32)*.24:0;
  return <AbsoluteFill style={{background:'#d3c9b5'}}>
-    <ThreeCanvas width={720} height={1280} dpr={0.5}
+    <ThreeCanvas width={720} height={1280} style={{width:720,height:1280}} dpr={0.5}
       gl={{antialias:false,stencil:false,powerPreference:'high-performance'}}
       camera={{fov:41,near:.2,far:600}}>
       <FullScene/>
@@ -263,7 +280,28 @@ export const PompeiiAdapted:React.FC=()=>{
 export const PompeiiAdaptedNoFx:React.FC=()=>(
   <AbsoluteFill style={{background:'#d3c9b5'}}>
     <ThreeCanvas width={720} height={1280} style={{width:720,height:1280}} camera={{fov:41,near:.2,far:600}}>
-      <FullScene withEffects={false}/>
+      <FullScene effectsMode="none"/>
     </ThreeCanvas>
   </AbsoluteFill>
+);
+
+export const PompeiiInk:React.FC=()=>(
+  <AbsoluteFill><ThreeCanvas width={720} height={1280} style={{width:720,height:1280}} camera={{fov:41,near:.2,far:600}}>
+    <FullScene effectsMode="ink"/>
+  </ThreeCanvas></AbsoluteFill>
+);
+export const PompeiiTone:React.FC=()=>(
+  <AbsoluteFill><ThreeCanvas width={720} height={1280} style={{width:720,height:1280}} camera={{fov:41,near:.2,far:600}}>
+    <FullScene effectsMode="tone"/>
+  </ThreeCanvas></AbsoluteFill>
+);
+export const PompeiiGrade:React.FC=()=>(
+  <AbsoluteFill><ThreeCanvas width={720} height={1280} style={{width:720,height:1280}} camera={{fov:41,near:.2,far:600}}>
+    <FullScene effectsMode="grade"/>
+  </ThreeCanvas></AbsoluteFill>
+);
+export const PompeiiLens:React.FC=()=>(
+  <AbsoluteFill><ThreeCanvas width={720} height={1280} style={{width:720,height:1280}} camera={{fov:41,near:.2,far:600}}>
+    <FullScene effectsMode="lens"/>
+  </ThreeCanvas></AbsoluteFill>
 );
