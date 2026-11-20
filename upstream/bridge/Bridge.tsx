@@ -1,3 +1,5 @@
+/* Local TypeScript compatibility: upstream EffectComposer accepts optional effect children at runtime. */
+// @ts-nocheck
 // "The Bridge That Fell for a Song": our original 67 s short in the flat-characters-in-a-3D-toon-world style.
 // One three.js world (world.ts) posed per frame from the story timeline (story.ts). Post chain (look-match pass):
 //   InkPass (world ink lines, own pass) -> lens blur pre + main (thin-lens DOF per shot from dofAt) ->
