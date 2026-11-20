@@ -71,11 +71,57 @@ function updateFlag(f:THREE.Mesh,t:number){
  verts.needsUpdate=true;f.geometry.computeVertexNormals();
 }
 type Side='ours'|'han'|'commander';
+// These are deliberately stylized interpretations of 10th-century clothing,
+// not archaeological replicas. The upstream rig's "shako" is NEVER used.
 const outfits:Record<Side,Outfit>={
- ours:{jacket:'#416e4f',pants:'#293f3d',boots:'#26232b',skin:'#edbd8f',hat:'hair',hair:'#20232a',belt:'#dcc07e'},
- commander:{jacket:'#b63e31',pants:'#394b40',boots:'#29242a',skin:'#e5b17e',hat:'hair',hair:'#22242c',belt:'#e1b45a',sash:'#f0c760',moustache:'#34221c'},
- han:{jacket:'#58596e',pants:'#333946',boots:'#242631',skin:'#ebbd9d',hat:'shako',belt:'#d9d1ae'}
+ ours:{jacket:'#78553b',pants:'#2e3830',boots:'#33251f',skin:'#d9a777',hat:'hair',hair:'#211f24',belt:'#c5a26b'},
+ commander:{jacket:'#a34130',pants:'#303e35',boots:'#2b241f',skin:'#d9a777',hat:'hair',hair:'#202026',belt:'#d4ae61',moustache:'#39291d'},
+ han:{jacket:'#535864',pants:'#303642',boots:'#282b31',skin:'#ddb18a',hat:'hair',hair:'#272a2e',belt:'#a3997b'}
 };
+// Coordinates are taken from upstream/toon.ts bodyFront (600×1000 design grid).
+// The head is centred approximately (300,310), collar near y=420,
+// torso occupies y~420..665. This overlay is painted AFTER bodyFront.
+function drawVietClothing(p:Pen,commander:boolean){
+  const cap=commander?'#6c2925':'#47372e';
+  const edge=commander?'#d9ad63':'#b99d77';
+  // Dark wrapped headband with fabric tie, leaving eyes visible.
+  p.poly([[192,247],[233,237],[315,241],[370,236],[407,252],[399,281],[200,280]],cap,10);
+  p.poly([[207,269],[186,283],[165,335],[195,320],[219,284]],cap,7);
+  p.stroke([[212,260],[383,260]],5,edge);
+  // Crossed ancient-style front opening, replacing the jacket lapel visually.
+  p.poly([[236,427],[300,464],[360,427],[370,455],[302,509],[226,455]],commander?'#91392d':'#65472e',8);
+  p.stroke([[232,433],[302,488],[363,435]],10,edge);
+  p.band([[228,593],[374,597]],commander?'#d8b25d':'#a78b68',21,7,'round');
+  if(commander){
+    // Cloth sash / commander badge, not a European coat or epaulettes.
+    p.poly([[238,469],[267,477],[363,625],[339,628]],'#e0b95f',8);
+    p.stroke([[244,477],[345,623]],4,'#71512d');
+    p.ell(299,598,14,13,'#c48c40',5);
+  }else{
+    p.stroke([[239,517],[358,517]],4,'#c6ad84');
+  }
+}
+function drawHanClothing(p:Pen){
+  // Low domed helmet with cheek guards (not a shako / Napoleonic headwear).
+  p.poly([[198,257],[221,213],[268,195],[335,193],[381,222],[401,257]],'#424a55',11);
+  p.poly([[191,256],[411,256],[403,284],[200,284]],'#757c84',9);
+  p.stroke([[217,264],[386,264]],6,'#b7a47e');
+  p.poly([[191,277],[225,277],[225,353],[197,341]],'#4e5563',8);
+  p.poly([[375,277],[409,277],[402,341],[376,353]],'#4e5563',8);
+  p.ell(300,228,12,14,'#bca672',5);
+  // Period-inspired overlapping lamellar armour. 4 visible rows;
+  // head and face remain unobstructed, no European uniform lapels.
+  p.poly([[234,424],[361,424],[375,557],[225,557]],'#484d57',11);
+  for(let row=0;row<4;row++){
+    const y=441+row*29;
+    p.poly([[233,y],[366,y],[361,y+21],[239,y+21]],row%2?'#69717b':'#777e88',5);
+    for(let col=0;col<4;col++)p.dot(251+col*31,y+12,2.8,'#d1b77a');
+  }
+  p.poly([[203,436],[241,426],[241,478],[209,481]],'#5e6570',7);
+  p.poly([[359,426],[397,436],[391,481],[359,478]],'#5e6570',7);
+  p.band([[229,575],[372,575]],'#a58c60',16,5);
+}
+
 class Soldier {
  canvas:HTMLCanvasElement;
  g:CanvasRenderingContext2D;
@@ -90,7 +136,7 @@ class Soldier {
    this.tex.colorSpace=THREE.SRGBColorSpace;this.tex.anisotropy=4;
    // Hard alpha test discards transparent pixels: opaque torso, no ghosting.
    const spriteMat=new THREE.SpriteMaterial({
-     map:this.tex,transparent:false,alphaTest:.24,opacity:1,
+     map:this.tex,transparent:false,alphaTest:.42,opacity:1,
      depthWrite:true,depthTest:true,toneMapped:false
    });
    this.sprite=new THREE.Sprite(spriteMat);
@@ -106,19 +152,21 @@ class Soldier {
  paint(t:number,alarm:boolean,command:boolean){
    const ctx=this.g;ctx.clearRect(0,0,480,800);
    ctx.save();ctx.scale(.8,.8);
-   const p=new Pen(ctx);p.ol=17;
-   const phase=(t*(alarm?2.1:.83)+this.id*.18)%1;
+   const p=new Pen(ctx);p.ol=16;
+   const phase=(t*(alarm?1.25:.67)+this.id*.18)%1;
    bodyFront(p,outfits[this.faction],{
-     seed:this.id+19,phase,mode:alarm?'march':'stand',
+     seed:this.id+19,phase,mode:'stand',
      expr:alarm?'shock':command?'stern':'neutral',
      blink:(Math.floor(t*FPS)+this.id*11)%77<3,
-     light:-.65,headTilt:alarm?Math.sin(t*4)*.045:0,
-     look:command?.18:0, wave:command?Math.sin(t*4)*.3:undefined,
-     lift:alarm?65:12
+     light:-.65,headTilt:alarm?Math.sin(t*2)*.025:0,
+     look:command?.1:0,wave:command?Math.sin(t*2.5)*.55:undefined
    });
+   if(this.faction==='han')drawHanClothing(p);
+   else drawVietClothing(p,this.faction==='commander');
    ctx.restore();
    this.tex.needsUpdate=true;
-   this.sprite.scale.y=1.84*(1+.023*Math.abs(Math.sin(phase*6.283)));
+   // Subtle breathing & ship motion, not soldiers marching in place on deck.
+   this.sprite.scale.y=1.84*(1+.007*Math.sin(t*2.1+this.id));
  }
  dispose(){this.tex.dispose();(this.sprite.material as THREE.Material).dispose();
    (this.shadow.material as THREE.Material).dispose();this.shadow.geometry.dispose();}
@@ -166,30 +214,38 @@ class Warship{
    for(let i=0;i<n;i++){
       const actor=new Soldier(side==='han'?'han':(i===0&&side==='commander'?'commander':'ours'),id*9+i);
       actor.sprite.position.set((i%2?.58:-.58),1.16,-length*.31+i*length*.19);
-      actor.shadow.position.set((i%2?.58:-.58),1.03,-length*.31+i*length*.19);
+      actor.shadow.position.set((i%2?.58:-.58),.95,-length*.31+i*length*.19);
       h.add(actor.sprite);h.add(actor.shadow);this.crew.push(actor);
    }
  }
  update(t:number,waterY:number){
-   for(const c of this.crew)c.paint(t,t>12,this.side==='commander');
+   for(const c of this.crew)c.paint(t,t>13,this.side==='commander');
    for(const f of this.flags)updateFlag(f,t+this.id);
-   const w=Math.sin(t*2.4+this.id)*.037;
-   const late=ss((t-13.0)/2.1);
-   if(this.side==='han'){
-     const approach=lim((t+1)*2.0,0,29);
-     this.root.position.set(this.id*3.0-3.0,waterY-.18,-27+approach-(this.id===2?6:0));
-     this.hull.rotation.set(w*(1+late),0,(this.id===1?-1:1)*late*.18);
-     this.root.position.z-=late*2.6;
-   }else{
-     const flee=lim(t*2.0,0,26);
-     this.root.position.set((this.id-4)*2.5+Math.sin(t*.6)*.5,waterY-.1,-2+flee);
-     if(t>14){
-        const reenter=ss((t-14)/3.2);
-        this.root.position.set((this.id===4?-8:8)-((this.id===4?-1:1)*reenter*3),waterY-.1,15-reenter*13);
-     }
-     this.hull.rotation.z=w;
+   // Stable world-space lanes: every adjacent pair is separated by more than
+   // their combined half-beams, with an extra 2m safety margin.
+   // x -11.25(Viet), -4.25(Han), +4.25(Han), +11.25(Viet)
+   // The Han lead reaches the first stake row and STOPS; a later
+   // stern tilt suggests collision with the fixed stake field.
+   const wave=Math.sin(t*2.2+this.id)*.025;
+   const strike=ss((t-14.3)/1.9);
+   if(this.id===0){ // Southern Han lead
+      const z=-31+Math.min(t*1.72,24.2);
+      this.root.position.set(-4.25,waterY-.17,z);
+      this.hull.rotation.set(wave,0,-strike*.14);
+   }else if(this.id===1){ // Southern Han second ship
+      const z=-44+Math.min(Math.max(t-1.4,0)*1.65,25);
+      this.root.position.set(4.25,waterY-.17,z);
+      this.hull.rotation.set(wave*.9,0,strike*.075);
+   }else if(this.id===2){ // Vietnamese lure, port outer lane
+      const z=t<12?-5+Math.min(t*1.8,21.6):16.6-Math.min((t-12)*.62,6.8);
+      this.root.position.set(-11.25,waterY-.1,z);
+      this.hull.rotation.set(wave,0,-.035);
+   }else{ // Vietnamese ambush flotilla, starboard outer lane
+      const z=t<14?11.5+Math.sin(t*.45)*.22:12-Math.min((t-14)*.85,7.9);
+      this.root.position.set(11.25,waterY-.1,z);
+      this.hull.rotation.set(wave*.8,0,.04);
    }
-   this.hull.rotation.x=Math.sin(t*1.7+this.id)*.045;
+   this.hull.rotation.x=Math.sin(t*1.5+this.id)*.028;
  }
  dispose(){this.crew.forEach(c=>c.dispose());}
 }
@@ -225,7 +281,7 @@ class Battlefield{
    // not mechanically rising through the riverbed.
    for(let row=0;row<5;row++)for(let col=0;col<5;col++){
      const x=(col-2)*3.4+(.3*row),z=-1+row*3.4;
-     const stakeGroup=new THREE.Group();stakeGroup.position.set(x,-2.35,z);
+     const stakeGroup=new THREE.Group();stakeGroup.position.set(x,-2.9,z);
      const tipMat=MAT.iron;
      const stake=pole(stakeGroup,MAT.wood,.35,3.35,0,1.5,0);
      stake.rotation.z=(rand(row*7+col)-.5)*.14;
@@ -239,8 +295,12 @@ class Battlefield{
       const m=cube(g,MAT.current,[(rand(i*4)-.5)*28,1.57,-38+rand(i*9)*95],[.24+rand(i)*1.6,.013,.045+rand(i+6)*.15]);
       this.ripple.push(m);
    }
-   this.ships.push(new Warship('han',0,11),new Warship('han',1,12),new Warship('han',2,10));
-   this.ships.push(new Warship('commander',4,7.6),new Warship('ours',5,6.7));
+   this.ships.push(
+     new Warship('han',0,11.2),
+     new Warship('han',1,10.5),
+     new Warship('commander',2,7.3),
+     new Warship('ours',3,6.8)
+   );
    for(const s of this.ships)g.add(s.root);
    this.sun=new THREE.DirectionalLight('#ffdb9f',2.25);
    this.sun.position.set(-14,33,-16);
@@ -259,6 +319,17 @@ class Battlefield{
       r.position.x=(rand(i*4)-.5)*28+Math.sin(t+i)*.06;
    }
    for(const s of this.ships)s.update(t,waterY);
+   // Collision QA. The 4 hulls are safely separated laterally at every frame,
+   // including when the two Han ships become stranded on the stakes.
+   for(let i=0;i<this.ships.length;i++){
+     for(let j=i+1;j<this.ships.length;j++){
+       const a=this.ships[i],b=this.ships[j];
+       const beamA=a.side==='han'?2.65:1.85;
+       const beamB=b.side==='han'?2.65:1.85;
+       const clearance=Math.abs(a.root.position.x-b.root.position.x)-beamA-beamB;
+       if(clearance<1.7)throw new Error('Ships overlap: '+a.id+' / '+b.id);
+     }
+   }
    // The stakes do not move. Rising above the water changes only by falling tide.
    for(let i=0;i<this.stakes.length;i++){
      const p=this.stakes[i];p.rotation.z=Math.sin(i*3.1)*.025;
@@ -270,12 +341,12 @@ class Battlefield{
    this.sun.intensity=2.35-drama*.25;
    // 6 distinct virtual camera shots, not a static pan over a painting.
    const shots=[
-     {at:0,end:3.7,pos:vec(9,13,38),aim:vec(0,1,-17),fov:41},
-     {at:3.7,end:7.3,pos:vec(-10,8.7,14),aim:vec(-1,2,-14),fov:45},
-     {at:7.3,end:10.8,pos:vec(7,7,20),aim:vec(4,2,7),fov:45},
-     {at:10.8,end:14.7,pos:vec(-3,5.4,17),aim:vec(0,1,5),fov:44},
-     {at:14.7,end:19,pos:vec(10,9.4,26),aim:vec(0,1,3),fov:46},
-     {at:19,end:25,pos:vec(-11,16,39),aim:vec(0,1,8),fov:41}
+     {at:0,end:4,pos:vec(10,12,40),aim:vec(0,2,-12),fov:41},
+     {at:4,end:8,pos:vec(-8,8,14),aim:vec(-3,2,-11),fov:44},
+     {at:8,end:12,pos:vec(9,8,18),aim:vec(2,2,4),fov:44},
+     {at:12,end:16,pos:vec(-3,6,20),aim:vec(0,1,5),fov:43},
+     {at:16,end:20,pos:vec(11,10,27),aim:vec(0,1,7),fov:45},
+     {at:20,end:25,pos:vec(-12,15,39),aim:vec(0,2,7),fov:41}
    ];
    const sh=shots.find(s=>t>=s.at&&t<s.end)||shots[shots.length-1];
    const k=ss((t-sh.at)/(sh.end-sh.at));
@@ -329,7 +400,7 @@ export const BachDang938:React.FC=()=>{
   <AbsoluteFill style={{pointerEvents:'none',
     background:'linear-gradient(180deg, rgba(6,20,28,.16) 0%,transparent 26%,transparent 68%,rgba(6,18,24,.29) 100%)'}}/>
   {t<2.5&&<ScreenTitle text="BẠCH ĐẰNG" tag="NĂM 938 • NGÔ QUYỀN"/>}
-  {t>12.2&&t<14.6&&<ScreenTitle text="NƯỚC TRIỀU RÚT" tag="BÃI CỌC NGẦM LỘ RA"/>}
+  {t>12.2&&t<14.6&&<ScreenTitle text="TRIỀU RÚT" tag="BÃI CỌC NGẦM LỘ RA"/>}
   {t>21&&<ScreenTitle text="ĐẠI THẮNG BẠCH ĐẰNG" tag="NĂM 938"/>}
   <Audio src={staticFile('audio/bach-dang.wav')}/>
  </AbsoluteFill>;

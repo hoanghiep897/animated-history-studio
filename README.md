@@ -4,6 +4,23 @@ Create animated history shorts with **2D ink-outlined characters inside a real 3
 
 ## New film: BẠCH ĐẰNG 938 (Ngô Quyền versus the Southern Han fleet)
 
+### Bạch Đằng V2 — historical costume / no ship overlap
+
+- Redesigned **all four boats**: 2 Southern Han boats in separate central lanes,
+  2 Vietnamese boats along the outer river channels. Guaranteed side clearance
+  at **every frame** with an in-scene collision assertion.
+- Replaced the reference rig's Napoleonic **shako** with original painted
+  helmet/lamellar details for Southern Han and wrapped headcloths/cross-front
+  tunics for Việt forces, using the **actual 600×1000 drawing coordinates** from
+  the upstream toon bodyFront renderer. These are interpretive 10th-century
+  costumes, **not authenticated reconstructions**.
+- Opaque alpha-tested character cutouts with depth buffering remain enabled.
+- Wooden stakes are fixed to the riverbed and become visible as the water recedes.
+- GitHub Actions workflow **Render Bach Dang 938 V2 — historical costumes and ship spacing**
+  exports `Bach_Dang_938_V2.mp4` in artifact `bach-dang-938-v2-film`.
+
+
+
 **A new original 24-second cinematic story; not the source Bridge sample.**
 
 Render with GitHub Actions → **Render Bach Dang 938 — original film**.

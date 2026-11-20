@@ -1,4 +1,4 @@
-name: Render Bach Dang 938 — original film
+name: Render Bach Dang 938 V2 — historical costumes and ship spacing
 
 on:
   push:
@@ -33,16 +33,16 @@ jobs:
         run: npx remotion browser ensure
       - name: Typecheck
         run: npm run typecheck
-      - name: Preview 5 original story shots
+      - name: Preview historical costumes, tide and 7 shot frames
         run: |
           mkdir -p out
-          for frame in 45 120 245 365 515; do
+          for frame in 45 110 190 275 350 430 545; do
             npx remotion still src/index.ts BachDang938 out/bach_dang_$frame.png \
               --frame "$frame" --gl swangle --scale 0.75
           done
       - name: Render full animated short
         run: |
-          npx remotion render src/index.ts BachDang938 out/Bach_Dang_938_Original_Short.mp4 \
+          npx remotion render src/index.ts BachDang938 out/Bach_Dang_938_V2.mp4 \
             --codec h264 --gl swangle --concurrency 1 --scale 0.75 --crf 18
       - name: Check MP4 is not blank and has both audio and video
         run: |
@@ -53,7 +53,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: bach-dang-938-new-film
+          name: bach-dang-938-v2-film
           path: |
             out/Bach_Dang_938_Original_Short.mp4
             out/bach_dang_*.png
