@@ -1,0 +1,50 @@
+name: Render Bạch Đằng V3 corrected counterattack clip
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/bach-dang-v3-camera-fix.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render-clip:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: npm install --no-fund --no-audit
+      - run: python3 scripts/make_bach_dang_extended_audio.py
+      - run: npx remotion browser ensure
+      - run: npm run typecheck
+      - name: Review flank boat closeups
+        run: |
+          mkdir -p out
+          npx remotion still src/index.ts BachDangExtended out/left_flank.png --frame 1010 --gl swangle --scale 0.75
+          npx remotion still src/index.ts BachDangExtended out/right_flank.png --frame 1090 --gl swangle --scale 0.75
+      - name: Render frames 975–1124 (39–45 seconds)
+        run: |
+          npx remotion render src/index.ts BachDangExtended out/counterattack_fix.mp4 \
+            --frames 975-1124 --codec h264 --gl swangle --concurrency 1 --scale 0.75 --crf 18
+      - name: Verify segment
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('out/counterattack_fix.mp4')
+          assert p.exists() and p.stat().st_size>100000
+          print('Counterattack patch',p.stat().st_size,'bytes')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bach-dang-extended-counterattack-corrected
+          path: |
+            out/counterattack_fix.mp4
+            out/*_flank.png
+          if-no-files-found: warn
+          retention-days: 14

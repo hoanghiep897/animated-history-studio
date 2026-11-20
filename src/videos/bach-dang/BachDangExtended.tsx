@@ -506,8 +506,8 @@ class Battlefield{
      {a:18,b:24,pos:vec(2,4.7,24),aim:vec(0,.2,4),fov:48},
      {a:24,b:31,pos:vec(-10,6.5,16),aim:vec(-3,0,0),fov:45},
      {a:31,b:39,pos:vec(-13,8,19),aim:vec(-3,-.4,-5),fov:44},
-     {a:39,b:42,pos:vec(-18,8,35),aim:vec(-12,1,12),fov:46},
-     {a:42,b:45,pos:vec(18,8,35),aim:vec(12,1,10),fov:46},
+     {a:39,b:42,pos:vec(-7,9,35),aim:vec(-12,1,12),fov:45},
+     {a:42,b:45,pos:vec(7,9,35),aim:vec(12,1,10),fov:45},
      {a:45,b:49,pos:vec(1,17,38),aim:vec(0,0,3),fov:42}
    ];
    const sh=shots.find(s=>t>=s.a&&t<s.b)||shots[shots.length-1];
