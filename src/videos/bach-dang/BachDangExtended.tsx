@@ -338,10 +338,10 @@ class Warship{
    const bob=Math.sin(t*2.1+this.id)*.024;
    if(this.id===0){
      const advance=Math.min(t*1.23,32.0);
-     this.root.position.set(-4.4,waterY-.12-sink*1.90,-37+advance);
+     this.root.position.set(-4.4,waterY-.12-sink*1.10,-37+advance);
    }else if(this.id===1){
      const advance=Math.min(Math.max(0,t-3)*1.37,35.0);
-     this.root.position.set(4.4,waterY-.13-sink*1.58,-40+advance);
+     this.root.position.set(4.4,waterY-.13-sink*.98,-40+advance);
    }else if(this.id===2){
      const lure=t<18?-6+t*1.65:t<35?23.7+(t-18)*.12:25.74-Math.min((t-35)*2.0,19);
      this.root.position.set(-12.6,waterY-.02,lure);
@@ -349,7 +349,7 @@ class Warship{
      const emerge=t<37?20+Math.sin(t*.24)*.35:20-Math.min((t-37)*1.9,20);
      this.root.position.set(12.6,waterY-.02,emerge);
    }
-   this.hull.rotation.set(bob+sink*.13,0,(this.id===0?-1:1)*sink*.26+bob*.5);
+   this.hull.rotation.set(bob+sink*.18,0,(this.id===0?-1:1)*sink*.32+bob*.5);
    this.broken.visible=tear;this.intact.visible=!tear;
    this.damagedInside.visible=tear;
    this.flood.visible=tear;
@@ -373,6 +373,10 @@ class Warship{
    for(const f of this.flags)updateFlag(f,t+this.id);
    for(const soldier of this.crew){
      soldier.paint(t,enemy&&t>contact-1,this.side==='commander');
+     // Prevent the former floating-head artifact after a hull is submerged.
+     const visible=!enemy||sink<.68;
+     soldier.sprite.visible=visible;
+     soldier.shadow.visible=visible;
    }
  }
  dispose(){this.crew.forEach(c=>c.dispose());}
@@ -412,9 +416,9 @@ class Battlefield{
      const group=new THREE.Group();group.position.set(x,-3.12,z);
      const root=pole(group,MAT.wood,.36,3.46,0,1.57,0);
      root.rotation.z=(rand(row*8+col)-.5)*.05;
-     const tip=new THREE.Mesh(new THREE.ConeGeometry(.36,.95,8),MAT.iron);
-     tip.position.y=3.72;group.add(tip);
-     cube(group,MAT.iron,[0,3.20,0],[.76,.10,.76]);
+     // Smaller iron-tipped sharpened timber: no square cap or traffic-cone silhouette.
+     const tip=new THREE.Mesh(new THREE.ConeGeometry(.255,.82,7),MAT.iron);
+     tip.position.y=3.66;group.add(tip);
      g.add(group);this.stakes.push(group);
    }
    for(let i=0;i<100;i++){
@@ -502,7 +506,8 @@ class Battlefield{
      {a:18,b:24,pos:vec(2,4.7,24),aim:vec(0,.2,4),fov:48},
      {a:24,b:31,pos:vec(-10,6.5,16),aim:vec(-3,0,0),fov:45},
      {a:31,b:39,pos:vec(-13,8,19),aim:vec(-3,-.4,-5),fov:44},
-     {a:39,b:45,pos:vec(13,8.5,24),aim:vec(5,0,6),fov:46},
+     {a:39,b:42,pos:vec(-18,8,35),aim:vec(-12,1,12),fov:46},
+     {a:42,b:45,pos:vec(18,8,35),aim:vec(12,1,10),fov:46},
      {a:45,b:49,pos:vec(1,17,38),aim:vec(0,0,3),fov:42}
    ];
    const sh=shots.find(s=>t>=s.a&&t<s.b)||shots[shots.length-1];

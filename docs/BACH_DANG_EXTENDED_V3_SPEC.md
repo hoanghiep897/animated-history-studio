@@ -34,7 +34,7 @@ Historical research:
 - Four fixed X lanes -12.6 / -4.4 / +4.4 / +12.6; per-frame AABB clearance tests prevent boat interpenetration.
 - Stakes are grouped at fixed riverbed positions; only the water plane falls.
 - High tide ~ y=1.60; low tide ~ y=-0.65 between 18 and 29 s.
-- Ship 1 damaged at 26.4 s, ship 2 at 29.8 s. Damaged hull uses geometry with missing side faces. No gore or injury closeups.
+- Ship 1 damaged at 26.4 s, ship 2 at 29.8 s; sinking is gradual to retain a visible upper hull. Damaged hull uses geometry with missing side faces. No gore or injury closeups.
 - Ships do not sink vertically instantly; damage → debris → inner flood → pitch/roll → slow descent.
 
 ## Costume silhouette
@@ -47,7 +47,7 @@ Historical research:
 ## Cinematography / finish
 
 - 720×1280 Remotion composition; exported at 0.75 scale = **540×960**, H.264 MP4.
-- Nine-to-eight planned dramatic cinematic camera setups (8 editing beats).
+- Nine purposeful cinematic camera setups, including separate close views of both Vietnamese flanking boats.
 - Saturated deep teal water, bronze sunset rim, brown wooden hulls, black ink outlines.
 - \`InkPass\`, \`BloomEffect\`, neutral tone-map, \`GradeEffect\` directly reused.
 - \`LensBlur\` purposely omitted: blacked out prior software-WebGL scenes.
