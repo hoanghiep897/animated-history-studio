@@ -2,6 +2,43 @@
 
 Create animated history shorts with **2D ink-outlined characters inside a real 3D scene**. This repository uses **Three.js / React Three Fiber / Remotion**. GitHub Actions renders MP4 in the cloud using software WebGL.
 
+## New original short: POMPEII — The Last Delivery (AD 79)
+
+This is **not** a re-render of BridgeShort and **not** a collection of still images.
+New story and staging: a Roman baker carries bread through a bustling street; the
+ground shakes, Vesuvius erupts, ash falls, roof tiles drop, and townspeople flee.
+The 20-second animated short has six original shots, deterministic character motion
+and hand-synthesized original music/SFX. It avoids the historically inaccurate image
+of red lava flowing down Pompeii's streets.
+
+Source: `src/videos/pompeii-adapted/PompeiiAdapted.tsx`. It directly imports and
+uses these MIT-licensed components of the original
+`mromidev/claude-animated-shorts` repository:
+- `bodyFront`, `Pen` and `Outfit` from `upstream/bridge/toon.ts`
+  (real walking/expressions/blinking, not a still-card pan);
+- `NOINK` and `InkPass` from `upstream/bridge/ink.ts` (3D geometry outlines);
+- `LensBlur` from `upstream/bridge/lensblur.ts` (lens depth of field);
+- `GradeEffect` and `gradeFor` from `upstream/bridge/grade.ts`;
+- `twoTone` from `upstream/bridge/shade.ts`;
+- `EffectComposer`, `BloomEffect` and `ToneMappingEffect` in the same
+  postprocessing order as the upstream bridge.
+
+**Run on GitHub:** Actions → **Render ORIGINAL-story Pompeii (upstream style)** →
+Run workflow → download `pompeii-new-story-upstream-engine` artifact after success.
+
+Local render (480? no; the composition is 500 frames at 25fps, 720x1280 source,
+360x640 rendered at 0.5 scale for software WebGL):
+```bash
+python3 scripts/make_pompeii_adapted_audio.py
+npm install
+npm run render:pompeii:adapted
+```
+
+This is an original **20-second proof-of-style short**, not the polished 67-second
+Bridge sample and not a ready-to-publish full film with narration.
+To improve production quality next, add Kenney Nature Kit scenery, voice-over,
+more animation beats, higher render resolution, and frame-by-frame QC.
+
 ## Render the ORIGINAL `mromidev/claude-animated-shorts` BridgeShort
 
 The original MIT-licensed Bridge source files (camera keys, 2D character rig, 3D world,
