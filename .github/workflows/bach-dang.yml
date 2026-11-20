@@ -46,16 +46,16 @@ jobs:
             --codec h264 --gl swangle --concurrency 1 --scale 0.75 --crf 18
       - name: Check MP4 is not blank and has both audio and video
         run: |
-          python3 scripts/check_video_frames.py out/Bach_Dang_938_Original_Short.mp4
-          ffprobe -v error -show_entries format=duration,size -of default=noprint_wrappers=1 out/Bach_Dang_938_Original_Short.mp4
-          ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1 out/Bach_Dang_938_Original_Short.mp4
+          python3 scripts/check_video_frames.py out/Bach_Dang_938_V2.mp4
+          ffprobe -v error -show_entries format=duration,size -of default=noprint_wrappers=1 out/Bach_Dang_938_V2.mp4
+          ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1 out/Bach_Dang_938_V2.mp4
       - name: Upload film and screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: bach-dang-938-v2-film
           path: |
-            out/Bach_Dang_938_Original_Short.mp4
+            out/Bach_Dang_938_V2.mp4
             out/bach_dang_*.png
           if-no-files-found: warn
           retention-days: 14

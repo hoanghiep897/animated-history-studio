@@ -344,15 +344,25 @@ class Battlefield{
      {at:0,end:4,pos:vec(10,12,40),aim:vec(0,2,-12),fov:41},
      {at:4,end:8,pos:vec(-8,8,14),aim:vec(-3,2,-11),fov:44},
      {at:8,end:12,pos:vec(9,8,18),aim:vec(2,2,4),fov:44},
-     {at:12,end:16,pos:vec(-3,6,20),aim:vec(0,1,5),fov:43},
+     {at:12,end:16,pos:vec(0,10,29),aim:vec(0,1,3),fov:47},
      {at:16,end:20,pos:vec(11,10,27),aim:vec(0,1,7),fov:45},
      {at:20,end:25,pos:vec(-12,15,39),aim:vec(0,2,7),fov:41}
    ];
    const sh=shots.find(s=>t>=s.at&&t<s.end)||shots[shots.length-1];
    const k=ss((t-sh.at)/(sh.end-sh.at));
    const shake=t>14&&t<17?Math.sin(t*27)*.1:0;
-   camera.position.copy(sh.pos).add(vec(k*.4,Math.sin(k*Math.PI)*.25,-k*.8+shake));
-   camera.fov=sh.fov;camera.lookAt(sh.aim.clone().add(vec(0,-k*.13,0)));
+   // A purposeful close tracking shot clearly shows period-inspired crew
+   // costumes instead of tiny figures (without the sail crossing the lens).
+   if(t>=4&&t<8){
+     const leadZ=this.ships[0].root.position.z;
+     camera.position.set(-10.5,5.9,leadZ+12.5);
+     camera.fov=44;
+     camera.lookAt(-4.25,2.8,leadZ);
+   }else{
+     camera.position.copy(sh.pos).add(vec(k*.4,Math.sin(k*Math.PI)*.25,-k*.8+shake));
+     camera.fov=sh.fov;
+     camera.lookAt(sh.aim.clone().add(vec(0,-k*.13,0)));
+   }
    camera.updateProjectionMatrix();
  }
  dispose(){this.ships.forEach(s=>s.dispose());}
