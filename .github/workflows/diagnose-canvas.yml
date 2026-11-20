@@ -31,6 +31,8 @@ jobs:
         run: npx remotion still src/index.ts VisualDebug out/debug-box.png --frame 5 --gl swangle --scale 0.5
       - name: Render adapted scene (with original postprocess)
         run: npx remotion still src/index.ts PompeiiAdapted out/debug-adapted.png --frame 185 --gl swangle --scale 0.5
+      - name: Render new Pompeii without effects
+        run: npx remotion still src/index.ts PompeiiNoFx out/pompeii-no-fx.png --frame 185 --gl swangle --scale 0.5
       - uses: actions/upload-artifact@v4
         if: always()
         with:

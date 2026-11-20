@@ -219,7 +219,7 @@ class PompeiiWorld {
  }
  dispose(){for(const p of this.people)p.dispose();}
 }
-const FullScene:React.FC=()=>{
+const FullScene:React.FC<{withEffects?:boolean}>=({withEffects=true})=>{
   const f=useCurrentFrame();
   const {camera,scene}=useThree();
   const world=useMemo(()=>new PompeiiWorld(),[]);
@@ -242,7 +242,7 @@ const FullScene:React.FC=()=>{
       <primitive object={fx.tone} dispose={null}/>
       <primitive object={fx.grade} dispose={null}/>
     </EffectComposer>,[fx]);
-  return <><primitive object={world.root} dispose={null}/>{post}</>;
+  return <><primitive object={world.root} dispose={null}/>{withEffects?post:null}</>;
 };
 export const PompeiiAdapted:React.FC=()=>{
  const f=useCurrentFrame(),t=f/FPS;
@@ -258,3 +258,12 @@ export const PompeiiAdapted:React.FC=()=>{
     <Audio src={staticFile('audio/pompeii-adapted.wav')}/>
  </AbsoluteFill>;
 };
+
+// Diagnostic: the exact original story and world, without postprocessing.
+export const PompeiiAdaptedNoFx:React.FC=()=>(
+  <AbsoluteFill style={{background:'#d3c9b5'}}>
+    <ThreeCanvas width={720} height={1280} style={{width:720,height:1280}} camera={{fov:41,near:.2,far:600}}>
+      <FullScene withEffects={false}/>
+    </ThreeCanvas>
+  </AbsoluteFill>
+);
