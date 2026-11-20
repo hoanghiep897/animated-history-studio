@@ -1,0 +1,59 @@
+name: Render ORIGINAL-story Pompeii (upstream style)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/videos/pompeii-adapted/**"
+      - "src/Root.tsx"
+      - "scripts/make_pompeii_adapted_audio.py"
+      - "package.json"
+      - ".github/workflows/pompeii-adapted.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install browser requirements
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnss3 libgbm1 libasound2t64 libatk-bridge2.0-0 libgtk-3-0 ffmpeg
+      - name: Install project
+        run: npm install --no-fund --no-audit
+      - name: Generate original soundtrack
+        run: python3 scripts/make_pompeii_adapted_audio.py
+      - name: Install Remotion headless browser
+        run: npx remotion browser ensure
+      - name: Check source and template interoperability
+        run: npm run typecheck
+      - name: Render shot stills
+        run: |
+          mkdir -p out
+          for f in 60 185 355 460; do
+            npx remotion still src/index.ts PompeiiAdapted out/pompeii_$f.png --frame "$f" --gl swangle --scale 0.5
+          done
+      - name: Render original Pompeii short MP4
+        run: npm run render:pompeii:adapted
+      - name: Inspect final video
+        run: |
+          ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate -of default=noprint_wrappers=1 out/pompeii_adapted.mp4
+          ffprobe -v error -show_entries format=duration,size -of default=noprint_wrappers=1 out/pompeii_adapted.mp4
+      - name: Upload video MP4 and frame previews
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pompeii-new-story-upstream-engine
+          path: |
+            out/pompeii_adapted.mp4
+            out/pompeii_*.png
+          if-no-files-found: warn
+          retention-days: 14

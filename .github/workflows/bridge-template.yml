@@ -1,15 +1,6 @@
 name: Render original bridge template (smoke test)
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "src/Root.tsx"
-      - "src/videos/bridge/**"
-      - "upstream/bridge/**"
-      - "scripts/make_bridge_audio.py"
-      - "package.json"
-      - ".github/workflows/bridge-template.yml"
   workflow_dispatch:
 
 permissions:
