@@ -1,0 +1,65 @@
+name: Render Bach Dang 938 Extended V3
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/videos/bach-dang/BachDangExtended.tsx"
+      - "src/Root.tsx"
+      - "scripts/make_bach_dang_extended_audio.py"
+      - "docs/BACH_DANG_EXTENDED_V3_SPEC.md"
+      - ".github/workflows/bach-dang-extended.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Node dependencies
+        run: npm install --no-audit --no-fund
+      - name: Generate original 48-second soundtrack and Foley
+        run: python3 scripts/make_bach_dang_extended_audio.py
+      - name: Ensure headless Chrome
+        run: npx remotion browser ensure
+      - name: TypeScript check
+        run: npm run typecheck
+      - name: Render 9 storyboard checkpoints
+        run: |
+          mkdir -p out
+          for frame in 60 200 335 490 610 690 850 1040 1170; do
+            npx remotion still src/index.ts BachDangExtended out/extended_$frame.png \
+              --frame "$frame" --gl swangle --scale 0.75
+          done
+      - name: Render full 48-second animated film
+        run: |
+          npx remotion render src/index.ts BachDangExtended out/Bach_Dang_938_Extended_V3.mp4 \
+            --codec h264 --gl swangle --concurrency 1 --scale 0.75 --crf 18
+      - name: Verify final MP4 container
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('out/Bach_Dang_938_Extended_V3.mp4')
+          assert p.exists(), 'MP4 missing'
+          assert p.stat().st_size>100000, 'MP4 suspiciously empty'
+          with p.open('rb') as f:
+              assert b'ftyp' in f.read(64), 'MP4 container header missing'
+          print('MP4 available:',p,p.stat().st_size,'bytes')
+          PY
+      - name: Upload MP4 and preview frames
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bach-dang-938-extended-v3
+          path: |
+            out/Bach_Dang_938_Extended_V3.mp4
+            out/extended_*.png
+          if-no-files-found: warn
+          retention-days: 14

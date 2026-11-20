@@ -2,6 +2,29 @@
 
 Create animated history shorts with **2D ink-outlined characters inside a real 3D scene**. This repository uses **Three.js / React Three Fiber / Remotion**. GitHub Actions renders MP4 in the cloud using software WebGL.
 
+## Bạch Đằng 938 — Extended Cut V3 (48 seconds)
+
+This is a new **48-second cinematic story**, rendered by Three.js + Remotion with the
+actual upstream animated-shorts toon, ink and grading engine. It replaces raft-like
+flat boards with curved-section hulls, raised prow/stern, V keels, ribs, decks,
+oars, a true missing-panel hull breach, animated floating splinters, flooding,
+slow ship sinking, tidal ebb exposing static iron-tipped stakes, and a Việt small
+boat counterattack.
+
+**[Full Production Specification](docs/BACH_DANG_EXTENDED_V3_SPEC.md)**
+
+**GitHub Actions:** `Render Bach Dang 938 Extended V3`
+creates `bach-dang-938-extended-v3`, including an actual MP4
+`Bach_Dang_938_Extended_V3.mp4` plus keyframe preview images.
+
+```bash
+python3 scripts/make_bach_dang_extended_audio.py
+npm install
+npx remotion render src/index.ts BachDangExtended out/Bach_Dang_938_Extended_V3.mp4 --gl swangle --scale 0.75 --concurrency 1 --crf 18
+```
+
+This stylized film is not an exact tenth-century archaeological reconstruction.
+
 ## New film: BẠCH ĐẰNG 938 (Ngô Quyền versus the Southern Han fleet)
 
 ### Bạch Đằng V2 — historical costume / no ship overlap

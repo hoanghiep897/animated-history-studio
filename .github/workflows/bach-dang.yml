@@ -1,13 +1,6 @@
 name: Render Bach Dang 938 V2 — historical costumes and ship spacing
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "src/videos/bach-dang/**"
-      - "src/Root.tsx"
-      - "scripts/make_bach_dang_audio.py"
-      - ".github/workflows/bach-dang.yml"
   workflow_dispatch:
 
 permissions:

@@ -6,6 +6,7 @@ import {BRIDGE_FRAMES} from '../upstream/bridge/Bridge';
 import {PompeiiAdapted,PompeiiAdaptedNoFx,PompeiiInk,PompeiiTone,PompeiiGrade,PompeiiLens,FPS,DURATION} from './videos/pompeii-adapted/PompeiiAdapted';
 import {VisualDebug} from './videos/pompeii-adapted/Debug';
 import {BachDang938,FPS as BD_FPS,DURATION as BD_SEC} from './videos/bach-dang/BachDang938';
+import {BachDangExtended,FPS as EX_FPS,DURATION as EX_SEC} from './videos/bach-dang/BachDangExtended';
 
 export const Root: React.FC = () => (<>
   <Composition id="PompeiiShort" component={Pompeii} durationInFrames={576} fps={24} width={720} height={1280}/>
@@ -17,5 +18,6 @@ export const Root: React.FC = () => (<>
   <Composition id="PompeiiGrade" component={PompeiiGrade} durationInFrames={FPS*DURATION} fps={FPS} width={720} height={1280}/>
   <Composition id="PompeiiLens" component={PompeiiLens} durationInFrames={FPS*DURATION} fps={FPS} width={720} height={1280}/>
   <Composition id="BachDang938" component={BachDang938} durationInFrames={BD_FPS*BD_SEC} fps={BD_FPS} width={720} height={1280}/>
+  <Composition id="BachDangExtended" component={BachDangExtended} durationInFrames={EX_FPS*EX_SEC} fps={EX_FPS} width={720} height={1280}/>
   <Composition id="VisualDebug" component={VisualDebug} durationInFrames={25} fps={25} width={720} height={1280}/>
 </>);
