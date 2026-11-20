@@ -17,11 +17,11 @@ uses these MIT-licensed components of the original
 - `bodyFront`, `Pen` and `Outfit` from `upstream/bridge/toon.ts`
   (real walking/expressions/blinking, not a still-card pan);
 - `NOINK` and `InkPass` from `upstream/bridge/ink.ts` (3D geometry outlines);
-- `LensBlur` from `upstream/bridge/lensblur.ts` (lens depth of field);
+- `LensBlur` from `upstream/bridge/lensblur.ts` (available but temporarily disabled in the final effect chain: software WebGL rendered this pass as black in the new scene);
 - `GradeEffect` and `gradeFor` from `upstream/bridge/grade.ts`;
 - `twoTone` from `upstream/bridge/shade.ts`;
-- `EffectComposer`, `BloomEffect` and `ToneMappingEffect` in the same
-  postprocessing order as the upstream bridge.
+- `EffectComposer`, `BloomEffect` and `ToneMappingEffect` in the original
+  ink → bloom → tone → grade order (lens pass omitted for compatibility).
 
 **Run on GitHub:** Actions → **Render ORIGINAL-story Pompeii (upstream style)** →
 Run workflow → download `pompeii-new-story-upstream-engine` artifact after success.
@@ -34,7 +34,7 @@ npm install
 npm run render:pompeii:adapted
 ```
 
-This is an original **20-second proof-of-style short**, not the polished 67-second
+This is an original **20-second proof-of-style short** (25fps, 360x640 in GitHub Actions), not the polished 67-second
 Bridge sample and not a ready-to-publish full film with narration.
 To improve production quality next, add Kenney Nature Kit scenery, voice-over,
 more animation beats, higher render resolution, and frame-by-frame QC.
