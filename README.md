@@ -2,6 +2,41 @@
 
 Create animated history shorts with **2D ink-outlined characters inside a real 3D scene**. This repository uses **Three.js / React Three Fiber / Remotion**. GitHub Actions renders MP4 in the cloud using software WebGL.
 
+## Render the ORIGINAL `mromidev/claude-animated-shorts` BridgeShort
+
+The original MIT-licensed Bridge source files (camera keys, 2D character rig, 3D world,
+custom ink lines, thin-lens blur, bloom and grading) are checked in under
+[`upstream/bridge/`](upstream/bridge/). Our `BridgeTemplate` composition invokes
+`BridgeShort` from `upstream/bridge/Bridge.tsx` **directly**; the wrapper at
+`src/videos/bridge/BridgeWithMusic.tsx` only adds a new soundtrack. The upstream
+Bridge.tsx contains a local `@ts-nocheck` compatibility line to handle a type
+mismatch in optional `EffectComposer` children; its rendering logic is otherwise intact.
+
+**GitHub Actions:** Open **Actions → Render original bridge template (smoke test) → Run workflow**.
+It creates a reference still and renders a 4-second excerpt to MP4. Download the
+`original-bridge-template-preview` artifact. The short preview is intentional:
+the complete 67.5-second upstream film, with many software-WebGL effects, can be
+resource intensive on a GitHub-hosted runner.
+
+**Original Kenney Nature Kit assets:** the upstream project references
+`public/bridge/kenney/*.glb`, but the source template ZIP does not include
+those binary models. The renderer catches failed asset loads, so the test
+can run without them, but some trees/props will be missing. Obtain relevant
+CC0 models from [Kenney Nature Kit](https://kenney.nl/assets/nature-kit)
+and place them at that path for closer fidelity.
+
+To render the full Bridge original locally (or edit a dedicated full-length
+GitHub workflow), after running `python3 scripts/make_bridge_audio.py`:
+```bash
+npx remotion render src/index.ts BridgeTemplate out/bridge_full.mp4 \
+  --codec h264 --gl swangle --concurrency 1 --crf 20 \
+  --scale 0.5 --props='{"post":{"dpr":0.5}}'
+```
+
+The original creator's private-study reference frames are **not** included
+or redistributed. The full Bridge example is the original example story,
+**not** an original Pompeii animation created for this project.
+
 ## What is here
 - `src/videos/pompeii/`: original **Pompeii, AD 79** animated demo (24s, vertical 720x1280, 24 fps).
 - `upstream/bridge/`: exact MIT-licensed TypeScript template source from [mromidev/claude-animated-shorts](https://github.com/mromidev/claude-animated-shorts) for reference. `toon.ts` is reused in our scene for its drawing API.
