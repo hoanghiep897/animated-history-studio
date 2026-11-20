@@ -51,8 +51,8 @@ function CameraRig({t}:{t:number}){
  const {camera}=useThree();
  useLayoutEffect(()=>{
    const f=smooth((t-9)/9),shake=t>7.9&&t<10.5?Math.sin(t*30)*.11:0;
-   camera.position.set(11.5-f*1.9+shake,8.2+f*1.5,18.5+f*2);
-   camera.lookAt(0,3.0,-4.5+f*1.8);camera.updateProjectionMatrix();
+   camera.position.set(2.7-f*.25+shake,8.5+f*.75,22.5+f*2.5);
+   camera.lookAt(0,2.8,-5.2+f*1.8);camera.updateProjectionMatrix();
  },[camera,t]);return null;
 }
 const colors=['#db9b78','#ead0a0','#b97e63','#d8b283','#d59875'];
