@@ -1,0 +1,39 @@
+name: Diagnose 3D canvas rendering
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "src/videos/pompeii-adapted/Debug.tsx"
+      - ".github/workflows/diagnose-canvas.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libnss3 libgbm1 libasound2t64 libatk-bridge2.0-0 libgtk-3-0 ffmpeg
+      - run: npm install --no-fund --no-audit
+      - run: |
+          python3 scripts/make_pompeii_adapted_audio.py
+          npx remotion browser ensure
+      - run: npm run typecheck
+      - name: Render basic Three.js canvas
+        run: npx remotion still src/index.ts VisualDebug out/debug-box.png --frame 5 --gl swangle --scale 0.5
+      - name: Render adapted scene (with original postprocess)
+        run: npx remotion still src/index.ts PompeiiAdapted out/debug-adapted.png --frame 185 --gl swangle --scale 0.5
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: debug-canvases
+          path: out/*.png
+          if-no-files-found: warn
