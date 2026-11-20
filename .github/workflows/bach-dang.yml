@@ -22,10 +22,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install browser dependencies
+      - name: Verify preinstalled Chromium runtime and FFmpeg
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libnss3 libgbm1 libasound2t64 libatk-bridge2.0-0 libgtk-3-0 ffmpeg
+          command -v ffmpeg
+          ldconfig -p | grep libgbm.so.1
+          ldconfig -p | grep libnss3.so
       - run: npm install --no-audit --no-fund
       - name: Generate original score and sound effects
         run: python3 scripts/make_bach_dang_audio.py
