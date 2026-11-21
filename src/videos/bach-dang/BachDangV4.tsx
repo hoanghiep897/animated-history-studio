@@ -383,53 +383,66 @@ class Warship{
    }
  }
  update(t:number,waterY:number){
-   const enemy=this.side==='han';
-   const contact=this.id===0?26.4:29.8;
-   const elapsed=t-contact;
-   const tear=enemy&&elapsed>0;
-   const sink=enemy?ss((t-contact-2.5)/12):0;
-   const bob=Math.sin(t*2.1+this.id)*.024;
-   if(this.id===0){
-     const advance=Math.min(t*1.23,32.0);
-     this.root.position.set(-4.4,waterY-.12-sink*1.10,-37+advance);
-   }else if(this.id===1){
-     const advance=Math.min(Math.max(0,t-3)*1.37,35.0);
-     this.root.position.set(4.4,waterY-.13-sink*.98,-40+advance);
-   }else if(this.id===2){
-     const lure=t<18?-6+t*1.65:t<35?23.7+(t-18)*.12:25.74-Math.min((t-35)*2.0,19);
-     this.root.position.set(-12.6,waterY-.02,lure);
-   }else{
-     const emerge=t<37?20+Math.sin(t*.24)*.35:20-Math.min((t-37)*1.9,20);
-     this.root.position.set(12.6,waterY-.02,emerge);
-   }
-   this.hull.rotation.set(bob+sink*.18,0,(this.id===0?-1:1)*sink*.32+bob*.5);
-   this.broken.visible=tear;this.intact.visible=!tear;
-   this.damagedInside.visible=tear;
-   this.flood.visible=tear;
-   if(tear){
-      const flooding=ss(elapsed/10);
-      this.flood.position.y=-.75+flooding*1.1;
-      this.flood.scale.y=.08+flooding*.07;
+   // Eleven boats: three LARGE Southern Han sailships, two escorts,
+   // six small Vietnamese rowing craft. Ambush boats enter after 37s.
+   const firstVisible=this.id>=7?37+(this.id-7)*.32:0;
+   this.root.visible=t>=firstVisible;
+   if(!this.root.visible)return;
+   const contacts=[26.6,30,33.5];
+   const hit=this.id<3?contacts[this.id]:Infinity;
+   const age=t-hit,torn=age>0;
+   const sink=torn?ss((age-2.3)/11.5):0;
+   if(this.id===0)this.root.position.set(-8.5,waterY-.42-sink*1.18,-40+Math.min(t*1.48,38));
+   else if(this.id===1)this.root.position.set(0,waterY-.42-sink*1.04,-48+Math.min(Math.max(0,t-2)*1.65,46));
+   else if(this.id===2)this.root.position.set(8.5,waterY-.42-sink*1.08,-62+Math.min(Math.max(0,t-3)*1.95,59));
+   else if(this.id===3)this.root.position.set(-15.3,waterY-.26,-51+Math.min(t*1.12,29));
+   else if(this.id===4)this.root.position.set(15.3,waterY-.26,-66+Math.min(t*1.3,39));
+   else if(this.id===5){
+     const z=t<19?-6+t*1.7:t<38?26.3+(t-19)*.16:29.34-Math.min((t-38)*2.1,19);
+     this.root.position.set(-21.6,waterY-.12,z);
+   }else if(this.id===6){
+     const z=t<19?3+t*1.3:t<38?27.7+(t-19)*.12:29.98-Math.min((t-38)*2.0,18.8);
+     this.root.position.set(21.6,waterY-.12,z);
+   }else if(this.id===7)this.root.position.set(-26.1,waterY-.12,36-Math.min(Math.max(0,t-37)*2.4,25));
+   else if(this.id===8)this.root.position.set(26.1,waterY-.12,38-Math.min(Math.max(0,t-37)*2.4,25));
+   else if(this.id===9)this.root.position.set(-21.6,waterY-.12,48-Math.min(Math.max(0,t-39)*1.9,18));
+   else this.root.position.set(21.6,waterY-.12,49-Math.min(Math.max(0,t-40)*1.8,17));
+   const bob=Math.sin(t*1.65+this.id)*.027;
+   this.hull.rotation.set(bob+sink*.16,0,(this.id===0?-1:1)*sink*.27+bob*.42);
+   this.intact.visible=!torn;this.broken.visible=torn;
+   this.damagedInside.visible=torn;this.flood.visible=torn;
+   if(torn){
+     const level=ss(age/10);
+     this.flood.position.y=this.deckY-1.12+level*.97;
+     this.flood.scale.y=.07+level*.08;
    }
    for(let i=0;i<this.debris.length;i++){
-     const obj=this.debris[i],age=elapsed-i*.11;
-     obj.visible=tear&&age>0&&age<3;
-     if(obj.visible){
-       obj.position.set((i%2?1:-1)*(this.beam*.68+age*.45),.25+age*.70-age*age*.22,this.length*.20+age*.30);
-       obj.rotation.set(age*.8+i,age*.4,age*1.1);
+     const m=this.debris[i],dt=age-i*.13;
+     m.visible=torn&&dt>0&&dt<3;
+     if(m.visible){
+       m.position.set((i%2?1:-1)*(this.beam*.73+dt*.5),
+         this.deckY+dt*.68-dt*dt*.19,this.length*.2+dt*.4);
+       m.rotation.set(dt*.8+i,dt*.7,dt*1.1);
      }
    }
    for(const o of this.oars){
-     o.pivot.rotation.z=o.side*(.07+.17*Math.sin(t*5.4+o.index*1.4));
-     o.pivot.rotation.y=o.side*.06*Math.cos(t*5.4+o.index);
+     o.pivot.rotation.z=o.side*(.08+.17*Math.sin(t*4.8+o.index*1.4));
+     o.pivot.rotation.y=o.side*.05*Math.cos(t*4.8+o.index);
+   }
+   for(const sail of this.sails){
+     const attr=sail.mesh.geometry.getAttribute('position') as THREE.BufferAttribute;
+     const init=sail.initial;
+     for(let i=0;i<attr.count;i++){
+       const x=init[i*3],y=init[i*3+1];
+       attr.setXYZ(i,x,y,.31*Math.sin((x/this.beam+1)*1.4)+.15*Math.sin(t*1.75+x*.6+y*.36));
+     }
+     attr.needsUpdate=true;sail.mesh.geometry.computeVertexNormals();
    }
    for(const f of this.flags)updateFlag(f,t+this.id);
-   for(const soldier of this.crew){
-     soldier.paint(t,enemy&&t>contact-1,this.side==='commander');
-     // Prevent the former floating-head artifact after a hull is submerged.
-     const visible=!enemy||sink<.68;
-     soldier.sprite.visible=visible;
-     soldier.shadow.visible=visible;
+   for(const p of this.crew){
+     p.paint(t,torn&&age<10,this.side==='commander');
+     p.sprite.visible=this.id>=3||sink<.67;
+     p.shadow.visible=p.sprite.visible;
    }
  }
  dispose(){this.crew.forEach(c=>c.dispose());}
