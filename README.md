@@ -2,6 +2,21 @@
 
 Create animated history shorts with **2D ink-outlined characters inside a real 3D scene**. This repository uses **Three.js / React Three Fiber / Remotion**. GitHub Actions renders MP4 in the cloud using software WebGL.
 
+## Bạch Đằng 938 V4 — large sail fleet, no water-through-hulls
+
+New Remotion composition `BachDangV4` (48 s). Replaces the four modest V3
+boats with an eleven-vessel flotilla: three big Southern Han warships with full
+battened sails, two escorts and six Vietnamese small rowing boats.
+The opaque shader-masked river ensures outside water cannot appear across the
+inside of the boats. A second water plane only appears *inside* damaged hulls.
+
+- [Production & QA spec](docs/BACH_DANG_V4_SPEC.md)
+- Visual QA: GitHub Actions → **QA — Bach Dang V4 fleet and opaque water**
+- Final render: GitHub Actions → **Render Bach Dang V4 cinematic**
+
+The scenes and costumes are stylized historical interpretations, not
+archaeological reconstructions. V2 and V3 remain available for comparison.
+
 ## Bạch Đằng 938 — Extended Cut V3 (48 seconds)
 
 This is a new **48-second cinematic story**, rendered by Three.js + Remotion with the

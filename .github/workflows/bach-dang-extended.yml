@@ -1,14 +1,6 @@
 name: Render Bach Dang 938 Extended V3
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "src/videos/bach-dang/BachDangExtended.tsx"
-      - "src/Root.tsx"
-      - "scripts/make_bach_dang_extended_audio.py"
-      - "docs/BACH_DANG_EXTENDED_V3_SPEC.md"
-      - ".github/workflows/bach-dang-extended.yml"
   workflow_dispatch:
 
 permissions:

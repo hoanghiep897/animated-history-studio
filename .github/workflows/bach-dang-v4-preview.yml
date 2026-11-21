@@ -1,0 +1,42 @@
+name: QA — Bach Dang V4 fleet and opaque water
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/videos/bach-dang/BachDangV4.tsx"
+      - ".github/workflows/bach-dang-v4-preview.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-fund --no-audit
+      - run: python3 scripts/make_bach_dang_extended_audio.py
+      - run: npx remotion browser ensure
+      - name: Check TypeScript
+        run: npm run typecheck
+      - name: Render 9 scene checkpoints
+        run: |
+          mkdir -p out
+          for frame in 45 185 320 485 660 755 905 1040 1170; do
+            npx remotion still src/index.ts BachDangV4 out/v4_$frame.png \
+              --frame "$frame" --scale 0.75 --gl swangle
+          done
+      - name: Upload visual QA
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bach-dang-v4-visual-qa
+          path: out/v4_*.png
+          if-no-files-found: warn
+          retention-days: 14
