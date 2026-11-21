@@ -330,38 +330,55 @@ class Warship{
      h.add(stem);
    }
    // Individual rotating oars along the port and starboard side.
-   for(let i=0;i<(side==='han'?4:3);i++)for(const s of [-1,1]){
-     const z=(-.29+i*.2)*length;
+   const oarCount=this.large?6:this.escort?4:3;
+   for(let i=0;i<oarCount;i++)for(const s of [-1,1]){
+     const z=(-.32+i*.64/(oarCount-1))*length;
      const pivot=new THREE.Group();
-     pivot.position.set(s*(beam*.83),.36,z);
-     const arm=new THREE.Mesh(new THREE.CylinderGeometry(.065,.084,2.65,7),MAT.edge);
+     pivot.position.set(s*(beam*.83),deckY-.18,z);
+     const oarLen=this.large?4.0:this.escort?3.1:2.65;
+     const arm=new THREE.Mesh(new THREE.CylinderGeometry(.065,.084,oarLen,7),MAT.edge);
      arm.rotation.z=Math.PI/2;
-     arm.position.set(s*1.15,0,0);
+     arm.position.set(s*oarLen*.47,0,0);
      pivot.add(arm);
-     const blade=cube(pivot,brown,[s*2.18,-.12,.04],[.78,.16,.33]);
+     const blade=cube(pivot,brown,[s*oarLen*.96,-.12,.04],[.70,.16,.33]);
      blade.rotation.z=-.08*s;
      h.add(pivot);this.oars.push({pivot,side:s,index:i});
    }
-   // No medieval European sails: a low pole carries a cloth standard.
-   const mastHeight=side==='han'?3.1:2.25;
-   pole(h,MAT.wood,.10,mastHeight,0,mastHeight/2+.28,-length*.15);
-   const flag=wave(h,side==='han'?'#493d56':'#a93125',.14,mastHeight+.30,-length*.15,side==='han'?1.10:.80);
+   // Full masts and battened cloth sails on all five Southern Han ships.
+   const mastHeight=this.large?8.2:this.escort?5.5:2.3;
+   const mastZ=-length*.12;
+   pole(h,MAT.wood,this.large?.20:.12,mastHeight,0,deckY+mastHeight/2,mastZ);
+   if(side==='han'){
+     const sw=beam*(this.large?1.85:1.66),sh=mastHeight*.53;
+     const geometry=new THREE.PlaneGeometry(sw,sh,10,8);
+     const sail=new THREE.Mesh(geometry,new THREE.MeshLambertMaterial({
+       color:this.large?'#c9b189':'#bca482',side:THREE.DoubleSide,transparent:false,
+       depthWrite:true,flatShading:true
+     }));
+     sail.position.set(0,deckY+mastHeight*.64,mastZ);h.add(sail);
+     this.sails.push({mesh:sail,initial:new Float32Array((geometry.getAttribute('position') as THREE.BufferAttribute).array)});
+     // Horizontal wood battens — differentiated from European square-rig ships.
+     for(let k=0;k<5;k++)
+       cube(h,MAT.edge,[0,deckY+mastHeight*(.38+k*.118),mastZ+.04],[sw*.94,.05,.06]);
+     cube(h,MAT.wood,[0,deckY+mastHeight*.94,mastZ],[sw*1.05,.1,.14]);
+   }
+   const flag=wave(h,side==='han'?'#493d56':'#a93125',.14,deckY+mastHeight+.28,mastZ,this.large?1.24:.82);
    this.flags.push(flag);
    // Flood water remains inside the broken boat while the hull goes down.
    this.flood=cube(h,new THREE.MeshLambertMaterial({color:'#2b7d89',flatShading:true}),
-      [0,-.78,0],[beam*1.33,.07,length*.57]);
+      [0,deckY-1.15,0],[beam*1.33,.07,length*.57]);
    this.flood.visible=false;
    for(let i=0;i<9;i++){
      const plank=cube(h,i%2?MAT.wood:MAT.edge,
        [(i%2?1:-1)*beam*.84,.27,length*.16],[.1,.09,.35+rand(i)*.28]);
      plank.visible=false;this.debris.push(plank);
    }
-   const n=side==='han'?4:3;
+   const n=this.large?3:2;
    for(let i=0;i<n;i++){
       const kind=side==='han'?'han':(i===0&&side==='commander'?'commander':'ours');
       const actor=new Soldier(kind,id*10+i);
-      actor.sprite.position.set((i%2?.55:-.55),.25,-length*.26+i*length*.16);
-      actor.shadow.position.set((i%2?.55:-.55),.20,-length*.26+i*length*.16);
+      actor.sprite.position.set((i%2?.55:-.55),deckY+.04,-length*.26+i*length*.21);
+      actor.shadow.position.set((i%2?.55:-.55),deckY+.01,-length*.26+i*length*.21);
       h.add(actor.sprite,actor.shadow);this.crew.push(actor);
    }
  }
