@@ -395,8 +395,8 @@ class Warship{
    if(this.id===0)this.root.position.set(-8.5,waterY-.42-sink*1.18,-40+Math.min(t*1.48,38));
    else if(this.id===1)this.root.position.set(0,waterY-.42-sink*1.04,-48+Math.min(Math.max(0,t-2)*1.65,46));
    else if(this.id===2)this.root.position.set(8.5,waterY-.42-sink*1.08,-62+Math.min(Math.max(0,t-3)*1.95,59));
-   else if(this.id===3)this.root.position.set(-15.3,waterY-.26,-51+Math.min(t*1.12,29));
-   else if(this.id===4)this.root.position.set(15.3,waterY-.26,-66+Math.min(t*1.3,39));
+   else if(this.id===3)this.root.position.set(-16.3,waterY-.26,-51+Math.min(t*1.12,29));
+   else if(this.id===4)this.root.position.set(16.3,waterY-.26,-66+Math.min(t*1.3,39));
    else if(this.id===5){
      const z=t<19?-6+t*1.7:t<38?26.3+(t-19)*.16:29.34-Math.min((t-38)*2.1,19);
      this.root.position.set(-21.6,waterY-.12,z);
