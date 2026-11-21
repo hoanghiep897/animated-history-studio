@@ -1,0 +1,83 @@
+name: Render Bach Dang 938 V4 — 11 ship fleet
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/videos/bach-dang/BachDangV4.tsx"
+      - ".github/workflows/bach-dang-v4.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  motion-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-fund --no-audit
+      - run: python3 scripts/make_bach_dang_extended_audio.py
+      - run: npx remotion browser ensure
+      - name: Render actual 4-second sail / hull movement
+        run: |
+          mkdir -p out
+          npx remotion render src/index.ts BachDangV4 out/Bach_Dang_V4_4s_Sail_Preview.mp4 \
+            --frames 150-249 --codec h264 --gl swangle --concurrency 1 --scale 0.75 --crf 19
+      - name: Check and upload 4s clip
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('out/Bach_Dang_V4_4s_Sail_Preview.mp4')
+          assert p.exists() and p.stat().st_size>100000
+          with p.open('rb') as f: assert b'ftyp' in f.read(64)
+          print(p,p.stat().st_size)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bach-dang-v4-sail-preview-4s
+          path: out/Bach_Dang_V4_4s_Sail_Preview.mp4
+          if-no-files-found: error
+          retention-days: 14
+
+  full-film:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install renderer
+        run: npm install --no-fund --no-audit
+      - name: Generate original 48s stereo sound
+        run: python3 scripts/make_bach_dang_extended_audio.py
+      - run: npx remotion browser ensure
+      - name: TypeScript
+        run: npm run typecheck
+      - name: Render 48-second Bach Dang V4 film
+        run: |
+          mkdir -p out
+          npx remotion render src/index.ts BachDangV4 out/Bach_Dang_938_V4.mp4 \
+            --codec h264 --gl swangle --concurrency 1 --scale 0.75 --crf 18
+      - name: Check that final MP4 is nonempty
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('out/Bach_Dang_938_V4.mp4')
+          assert p.exists() and p.stat().st_size>100000, 'Full MP4 missing'
+          with p.open('rb') as f: assert b'ftyp' in f.read(64), 'Not an MP4'
+          print('FULL V4 MOVIE',p.stat().st_size)
+          PY
+      - name: Publish full MP4
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bach-dang-938-v4-full-film
+          path: out/Bach_Dang_938_V4.mp4
+          if-no-files-found: warn
+          retention-days: 14
