@@ -454,19 +454,20 @@ class Battlefield{
  reeds:THREE.Mesh[]=[];
  stakes:THREE.Group[]=[];
  ships:Warship[]=[];
+ waterMasks:THREE.Vector4[]=Array.from({length:FLEET_COUNT},()=>new THREE.Vector4(999,999,1,1));
  splashes:THREE.Mesh[]=[];
  arrows:THREE.Mesh[]=[];
  sun:THREE.DirectionalLight;
  ambient:THREE.AmbientLight;
  constructor(){
    const g=this.root;
-   cube(g,MAT.waterDeep,[0,-2.6,-7],[46,.4,155]);
-   this.water=cube(g,MAT.water,[0,1.6,-7],[32,.10,140]);
+   cube(g,MAT.waterDeep,[0,-2.6,-7],[74,.4,155]);
+   this.water=cube(g,maskedRiverMaterial(this.waterMasks),[0,1.6,-7],[68,.10,140]);
    for(const side of [-1,1]){
-     cube(g,MAT.earth,[side*25,-.45,-8],[19,3.1,155]);
-     cube(g,MAT.banks,[side*18.4,.56,-8],[8.8,1.8,155]);
+     cube(g,MAT.earth,[side*48,-.45,-8],[30,3.1,155]);
+     cube(g,MAT.banks,[side*39,.56,-8],[13,1.8,155]);
      for(let i=0;i<30;i++){
-       const x=side*(16.2+rand(i*17+side)*6),z=-57+rand(i*19+side)*110;
+       const x=side*(34.4+rand(i*17+side)*10),z=-57+rand(i*19+side)*110;
        const reed=pole(g,MAT.reeds,.07,1.6+rand(i)*1.6,x,1.9,z);
        reed.rotation.z=side*(.07+rand(i+14)*.15);this.reeds.push(reed);
        if(i%5===0){
@@ -487,16 +488,23 @@ class Battlefield{
      tip.position.y=3.66;group.add(tip);
      g.add(group);this.stakes.push(group);
    }
-   for(let i=0;i<100;i++){
-     const p=cube(g,MAT.current,[(rand(i*4)-.5)*30,1.66,-50+rand(i*9)*110],
+   for(let i=0;i<140;i++){
+     const p=cube(g,MAT.current,[(rand(i*4)-.5)*64,1.66,-50+rand(i*9)*110],
          [.2+rand(i)*1.35,.012,.035+rand(i+6)*.13]);
      this.ripples.push(p);
    }
    this.ships.push(
-     new Warship('han',0,12.5),
-     new Warship('han',1,11.8),
-     new Warship('commander',2,7.4),
-     new Warship('ours',3,7.0)
+     new Warship('han',0,17.5),   // flagship, port
+     new Warship('han',1,18.2),   // flagship, centre
+     new Warship('han',2,16.8),   // flagship, starboard
+     new Warship('han',3,11.3),   // Han escort, port
+     new Warship('han',4,10.8),   // Han escort, starboard
+     new Warship('commander',5,8.1),
+     new Warship('ours',6,7.8),
+     new Warship('ours',7,7.4),
+     new Warship('ours',8,7.3),
+     new Warship('ours',9,7.5),
+     new Warship('ours',10,7.4)
    );
    for(const s of this.ships)g.add(s.root);
    // Actual moving splash droplets and splinter trails at impact.
@@ -519,12 +527,28 @@ class Battlefield{
    // High tide to low tide over 18–29 seconds. Staked riverbed stays still.
    const tide=ss((t-18)/11.0),waterY=1.6-tide*2.25;
    this.water.position.y=waterY;
+   // Update all eleven boat cutouts to match each vessel world position.
+   // Closed-up bow, open deck and internal hull no longer show the outer water.
+   for(let i=0;i<this.ships.length;i++){
+     const ship=this.ships[i];
+     ship.update(t,waterY);
+     const mask=this.waterMasks[i];
+     if(ship.root.visible)
+       mask.set(ship.root.position.x,ship.root.position.z,
+         ship.beam*1.05,ship.length*.545);
+     else mask.set(999,999,1,1);
+   }
    for(let i=0;i<this.ripples.length;i++){
      const p=this.ripples[i];p.position.y=waterY+.065;
      p.position.z=-50+((rand(i*9)*110+t*(.5+rand(i)*.45))%110);
-     p.position.x=(rand(i*4)-.5)*30+Math.sin(t+i)*.06;
+     p.position.x=(rand(i*4)-.5)*64+Math.sin(t+i)*.06;
+     // Transparent foam cards must also stay OUT of every hull.
+     p.visible=!this.waterMasks.some(b=>{
+       const dx=(p.position.x-b.x)/b.z,dz=(p.position.z-b.y)/b.w;
+       return dx*dx+dz*dz<1.12;
+     });
    }
-   for(const ship of this.ships)ship.update(t,waterY);
+   // All ships were positioned above before masks and ripples are updated.
    // Pairwise AABB hull clearance in X and Z (different lane means safe).
    for(let i=0;i<this.ships.length;i++)for(let j=i+1;j<this.ships.length;j++){
      const a=this.ships[i],b=this.ships[j];
@@ -534,11 +558,11 @@ class Battlefield{
        throw new Error('Hull collision between '+a.id+' and '+b.id+' @ '+t.toFixed(2)+'s');
    }
    for(let i=0;i<this.splashes.length;i++){
-     const hit=i%2===0?26.4:29.8,age=t-hit-(i%11)*.045;
+     const hit=i%2===0?26.6:30.0,age=t-hit-(i%11)*.045;
      const d=this.splashes[i];
      d.visible=age>=0&&age<1.75;
      if(d.visible){
-       const ship=this.ships[i%2],sign=(i%3-1);
+       const ship=this.ships[i%2];
        const drift=(rand(i*11)-.5)*2.5;
        const vx=(rand(i*2)-.5)*2.5;
        d.position.set(ship.root.position.x+vx*age,waterY+.4+age*(2.6+rand(i+10)*1.6)-3.2*age*age,
@@ -552,7 +576,7 @@ class Battlefield{
      obj.visible=age>0&&age<1.65;
      if(obj.visible){
        const left=i%2===0;
-       const x0=left?-12.6:12.6,x1=left?-4.4:4.4;
+       const x0=left?-21.6:21.6,x1=left?-8.5:8.5;
        const u=ss(age/1.65);
        obj.position.set(x0+(x1-x0)*u,3.4+2.6*Math.sin(u*Math.PI),
           6+(i%5)*.72);
@@ -566,23 +590,23 @@ class Battlefield{
    // Nine camera setpieces: wide, hull closeup, lure, tide, stake,
    // breach, flooding, counterattack and victory.
    const shots=[
-     {a:0,b:6,pos:vec(10,13,40),aim:vec(0,1,-17),fov:41},
-     {a:6,b:12,pos:vec(-12,7,20),aim:vec(-4,2,-18),fov:47},
-     {a:12,b:18,pos:vec(-17,7,34),aim:vec(-11,1.4,13),fov:47},
-     {a:18,b:24,pos:vec(2,4.7,24),aim:vec(0,.2,4),fov:48},
-     {a:24,b:31,pos:vec(-10,6.5,16),aim:vec(-3,0,0),fov:45},
-     {a:31,b:39,pos:vec(-13,8,19),aim:vec(-3,-.4,-5),fov:44},
-     {a:39,b:42,pos:vec(-7,9,35),aim:vec(-12,1,12),fov:45},
-     {a:42,b:45,pos:vec(7,9,35),aim:vec(12,1,10),fov:45},
-     {a:45,b:49,pos:vec(1,17,38),aim:vec(0,0,3),fov:42}
+     {a:0,b:6,pos:vec(0,26,70),aim:vec(0,2,-14),fov:56},
+     {a:6,b:12,pos:vec(-19,9,31),aim:vec(-8.5,3,-14),fov:49},
+     {a:12,b:18,pos:vec(-15,9,43),aim:vec(-21.6,2,12),fov:49},
+     {a:18,b:24,pos:vec(2,6,31),aim:vec(0,.3,8),fov:50},
+     {a:24,b:31,pos:vec(-20,10,20),aim:vec(-8.5,1,0),fov:48},
+     {a:31,b:39,pos:vec(1,17,42),aim:vec(0,.4,-1),fov:51},
+     {a:39,b:42,pos:vec(-12,12,50),aim:vec(-21.6,1,13),fov:49},
+     {a:42,b:45,pos:vec(12,12,50),aim:vec(21.6,1,14),fov:49},
+     {a:45,b:49,pos:vec(0,29,76),aim:vec(0,1,-1),fov:58}
    ];
    const sh=shots.find(s=>t>=s.a&&t<s.b)||shots[shots.length-1];
    const k=ss((t-sh.a)/(sh.b-sh.a));
    camera.position.copy(sh.pos).add(vec(k*.35,Math.sin(k*Math.PI)*.17,-k*.6));
    if(t>=6&&t<12){
      const hanZ=this.ships[0].root.position.z;
-     camera.position.set(-13,6.5,hanZ+14);
-     camera.lookAt(-4.4,1.7,hanZ);
+     camera.position.set(-19,8.8,hanZ+20);
+     camera.lookAt(-8.5,3.8,hanZ);
    }else{
      camera.lookAt(sh.aim);
    }
