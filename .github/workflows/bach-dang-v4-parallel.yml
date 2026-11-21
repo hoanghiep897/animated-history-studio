@@ -1,0 +1,51 @@
+name: Render Bach Dang V4 — six parallel 8s segments
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/bach-dang-v4-parallel.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  segments:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        chunk: [0, 1, 2, 3, 4, 5]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: npm install --no-fund --no-audit
+      - run: python3 scripts/make_bach_dang_extended_audio.py
+      - run: npx remotion browser ensure
+      - name: Render exactly 200 video frames with real motion
+        run: |
+          mkdir -p out
+          START=$(( ${{ matrix.chunk }} * 200 ))
+          END=$(( START + 199 ))
+          npx remotion render src/index.ts BachDangV4 out/segment_${{ matrix.chunk }}.mp4 \
+            --frames "$START-$END" --codec h264 --gl swangle --concurrency 1 --scale 0.75 --crf 18
+      - name: Confirm valid segment container
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('out/segment_${{ matrix.chunk }}.mp4')
+          assert p.exists() and p.stat().st_size > 100000, 'Segment failed'
+          with p.open('rb') as f:
+              assert b'ftyp' in f.read(64), 'Invalid MP4'
+          print(p, p.stat().st_size, 'bytes')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bach-dang-v4-segment-${{ matrix.chunk }}
+          path: out/segment_${{ matrix.chunk }}.mp4
+          if-no-files-found: error
+          retention-days: 14
