@@ -235,17 +235,42 @@ function curvedRail(h:THREE.Group,beam:number,length:number,side:number,mat:THRE
  const rail=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),45,.095,6,false),mat);
  h.add(rail);
 }
+const FLEET_COUNT=11;
+// The river is opaque and depth-tested. Boat footprints are clipped from its
+// surface in the fragment shader; only the explicitly animated inside-flood
+// plane can be seen within a damaged vessel.
+function maskedRiverMaterial(masks:THREE.Vector4[]){
+ const mat=new THREE.MeshPhongMaterial({color:'#175769',shininess:68,specular:'#538b91',transparent:false,depthWrite:true});
+ mat.onBeforeCompile=(shader)=>{
+   shader.uniforms.fleetMasks={value:masks};
+   shader.vertexShader=shader.vertexShader.replace('#include <common>',
+     '#include <common>\nvarying vec3 vFleetWorld;')
+     .replace('#include <worldpos_vertex>',
+     '#include <worldpos_vertex>\nvFleetWorld=(modelMatrix*vec4(transformed,1.0)).xyz;');
+   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
+     '#include <common>\nuniform vec4 fleetMasks[11];\nvarying vec3 vFleetWorld;')
+     .replace('#include <clipping_planes_fragment>',
+     '#include <clipping_planes_fragment>\nfor(int k=0;k<11;k++){vec4 b=fleetMasks[k];vec2 d=(vFleetWorld.xz-b.xy)/max(b.zw,vec2(.001));if(dot(d,d)<1.0)discard;}');
+ };
+ mat.customProgramCacheKey=()=> 'water-mask-v4-11';
+ return mat;
+}
 class Warship{
  root=new THREE.Group();hull=new THREE.Group();
  crew:Soldier[]=[];flags:THREE.Mesh[]=[];
  oars:{pivot:THREE.Group;side:number;index:number}[]=[];
+ sails:{mesh:THREE.Mesh;initial:Float32Array}[]=[];
+ large:boolean;escort:boolean;deckY:number;
  intact:THREE.Mesh;broken:THREE.Mesh;
  damagedInside:THREE.Mesh; flood:THREE.Mesh; debris:THREE.Mesh[]=[];
  wake:THREE.Mesh[]=[];
  beam:number;
  constructor(public side:Side,public id:number,public length:number){
-   this.beam=side==='han'?2.75:1.72;
-   const beam=this.beam, h=this.hull;
+   this.large=side==='han'&&id<3;
+   this.escort=side==='han'&&id>=3;
+   this.beam=this.large?(id===1?3.70:3.55):this.escort?2.24:1.55;
+   this.deckY=this.large?1.06:this.escort?.58:.30;
+   const beam=this.beam,h=this.hull,deckY=this.deckY;
    this.root.add(h);
    const brown=side==='han'?MAT.darkwood:MAT.wood;
    const hullMaterial=new THREE.MeshLambertMaterial({
@@ -253,25 +278,36 @@ class Warship{
    });
    this.intact=new THREE.Mesh(createCurvedHull(beam,length,false),hullMaterial);
    this.broken=new THREE.Mesh(createCurvedHull(beam,length,true),hullMaterial);
+   const heightScale=this.large?1.65:this.escort?1.33:1.04;
+   this.intact.scale.y=heightScale;this.broken.scale.y=heightScale;
    this.broken.visible=false;
    h.add(this.intact,this.broken);
    // Dark inner ribbed hull exposed through the torn section after the strike.
    this.damagedInside=ellipsoid(h,MAT.darkwood,[0,.20,length*.24],[beam*.84,.54,length*.16]);
    this.damagedInside.visible=false;
    // Curved raised railings and thick wooden ribs.
-   for(const s of [-1,1])curvedRail(h,beam,length,s,MAT.edge);
+   for(const edge of [-1,1]){
+     const points:THREE.Vector3[]=[];
+     for(let i=0;i<=20;i++){
+       const u=i/20,z=(u-.5)*length;
+       const width=(.24+.76*Math.pow(Math.max(0,Math.sin(Math.PI*u)),.72))*beam;
+       const rise=.58*Math.pow(Math.abs(2*u-1),3.5);
+       points.push(vec(edge*width,(.84+rise)*heightScale,z));
+     }
+     h.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),40,.105,6,false),MAT.edge));
+   }
    for(let i=1;i<=12;i++){
      const u=i/13,z=(u-.5)*length;
      const width=(.24+.76*Math.pow(Math.max(0,Math.sin(Math.PI*u)),.72))*beam;
      const rise=.58*Math.pow(Math.abs(2*u-1),3.5);
      // Ribs extending from gunwale towards the chine.
      for(const s of [-1,1]){
-       const points=[vec(s*width,.83+rise,z),vec(s*width*.84,.26+rise*.7,z),vec(s*width*.69,-.11+rise*.4,z)];
+       const points=[vec(s*width,(.83+rise)*heightScale,z),vec(s*width*.84,(.26+rise*.7)*heightScale,z),vec(s*width*.69,(-.11+rise*.4)*heightScale,z)];
        const rib=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),7,.052,5,false),MAT.edge);
        h.add(rib);
      }
      if(i%2===0){
-       cube(h,MAT.deck,[0,.18+rise*.12,z],[width*1.48,.10,.11]);
+       cube(h,MAT.deck,[0,deckY-.10+rise*.08,z],[width*1.48,.10,.11]);
      }
    }
    const deckShape=new THREE.Shape();
@@ -284,12 +320,12 @@ class Warship{
    deckShape.lineTo(-beam*.84,-length*.16);
    deckShape.closePath();
    const deck=new THREE.Mesh(new THREE.ShapeGeometry(deckShape),MAT.deck);
-   deck.rotation.x=-Math.PI/2;deck.position.y=.18;h.add(deck);
+   deck.rotation.x=-Math.PI/2;deck.position.y=deckY;h.add(deck);
    // Raised stems curve up at both ends, unmistakably boat-like.
    for(const dir of [-1,1]){
      const stemPts=[
-       vec(0,-.55,dir*length*.30),vec(0,.45,dir*length*.46),
-       vec(0,1.32,dir*length*.53),vec(0,1.84,dir*length*.52)];
+       vec(0,-.55*heightScale,dir*length*.30),vec(0,deckY,dir*length*.46),
+       vec(0,1.45*heightScale,dir*length*.53),vec(0,2.05*heightScale,dir*length*.52)];
      const stem=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(stemPts),12,.17,7,false),MAT.edge);
      h.add(stem);
    }
