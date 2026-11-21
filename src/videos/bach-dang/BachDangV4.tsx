@@ -552,6 +552,8 @@ class Battlefield{
    // Pairwise AABB hull clearance in X and Z (different lane means safe).
    for(let i=0;i<this.ships.length;i++)for(let j=i+1;j<this.ships.length;j++){
      const a=this.ships[i],b=this.ships[j];
+     // Hidden ambush craft are not positioned in the river until 37s.
+     if(!a.root.visible||!b.root.visible)continue;
      const dx=Math.abs(a.root.position.x-b.root.position.x);
      const dz=Math.abs(a.root.position.z-b.root.position.z);
      if(dx<a.beam+b.beam+1.2 && dz<(a.length+b.length)*.52+1.0)
